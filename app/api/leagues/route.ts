@@ -119,6 +119,8 @@ export async function GET() {
 
 // POST /api/leagues - Create a new league
 export async function POST(request: NextRequest) {
+  let body: any
+  
   try {
     const session = await getServerSession(authOptions)
     
@@ -126,7 +128,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const body = await request.json()
+    body = await request.json()
     const { name, maxTeams, isPaid, entryFee, draftType, draftDate } = body
 
     if (!name) {
@@ -170,9 +172,8 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.warn('Database error in create league API, returning demo response:', error)
     
-    // Fallback to demo mode
-    const body = await request.json()
-    const { name, maxTeams, isPaid, entryFee, draftType, draftDate } = body
+    // Use body that was already parsed, or provide fallback values
+    const { name, maxTeams, isPaid, entryFee, draftType, draftDate } = body || {}
     
     const mockLeague = {
       id: 'demo-league-' + Date.now(),

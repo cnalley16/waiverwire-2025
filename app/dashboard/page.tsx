@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useSession } from 'next-auth/react'
+import { useSession, signOut } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import CreateLeagueForm from '@/components/CreateLeagueForm'
 
@@ -118,12 +118,20 @@ export default function Dashboard() {
                 Welcome back, {session?.user?.firstName || session?.user?.username}!
               </p>
             </div>
-            <button
-              onClick={() => setShowCreateForm(true)}
-              className="btn-primary"
-            >
-              Create New League
-            </button>
+            <div className="flex items-center space-x-4">
+              <button
+                onClick={() => signOut({ callbackUrl: '/' })}
+                className="btn-secondary text-sm"
+              >
+                Sign Out
+              </button>
+              <button
+                onClick={() => setShowCreateForm(true)}
+                className="btn-primary"
+              >
+                Create New League
+              </button>
+            </div>
           </div>
         </div>
       </div>
