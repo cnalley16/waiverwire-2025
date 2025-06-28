@@ -1,0 +1,565 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User accounts for WaiverWire.com members
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  username      String    @unique
+  firstName     String?
+  lastName      String?
+  profileImage  String?
+  timezone      String    @default("America/New_York")
+  isActive      Boolean   @default(true)
+  emailVerified Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relationships
+  teamsOwned    Team[]
+  leaguesCommissioned League[] @relation("LeagueCommissioner")
+  transactions  Transaction[]
+  messages      Message[]
+  draftPicks    DraftPick[]
+  tradeOffers   TradeOffer[] @relation("TradeOfferer")
+  tradeTargets  TradeOffer[] @relation("TradeTarget")
+
+  @@map("users")
+}
+
+// Fantasy Football Leagues
+model League {
+  id              String    @id @default(cuid())
+  name            String
+  password        String?   // Optional password for joining
+  customUrl       String?   @unique // Custom league URL
+  commissionerId  String
+  maxTeams        Int       @default(12)
+  isActive        Boolean   @default(true)
+  isPaid          Boolean   @default(false)
+  entryFee        Decimal?  // Entry fee for paid leagues
+  prizeAmount     Decimal?  // Total prize pool
+  draftType       DraftType @default(LIVE_ONLINE)
+  draftDate       DateTime?
+  seasonStartWeek Int       @default(1)
+  leagueStartDate DateTime?
+  rosterDeadline  DateTime?
+  maxAddsPerSeason Int?
+  maxAddsPerWeek  Int?
+  tradeRejectTime Int       @default(24) // Hours
+  tradeEndDate    DateTime?
+  waiverTime      Int       @default(24) // Hours
+  commissionerMessage String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relationships
+  commissioner    User      @relation("LeagueCommissioner", fields: [commissionerId], references: [id])
+  teams           Team[]
+  leagueSettings  LeagueSettings?
+  scoringSettings ScoringSettings?
+  rosterSettings  RosterSettings?
+  draft           Draft?
+  games           Game[]
+  transactions    Transaction[]
+  messages        Message[]
+  tradeOffers     TradeOffer[]
+
+  @@map("leagues")
+}
+
+// League configuration settings
+model LeagueSettings {
+  id                String    @id @default(cuid())
+  leagueId          String    @unique
+  scoringType       ScoringType @default(PERFORMANCE)
+  hasDivisions      Boolean   @default(false)
+  playoffTeams      Int       @default(4)
+  playoffStartWeek  Int       @default(14)
+  canTradeDraftPicks Boolean  @default(false)
+  tradeReviewType   TradeReviewType @default(COMMISSIONER)
+  waiverType        WaiverType @default(REVERSE_STANDINGS)
+  cantCutList       Json?     // List of player IDs that can't be cut
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  // Relationships
+  league            League    @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+
+  @@map("league_settings")
+}
+
+// Scoring system configuration
+model ScoringSettings {
+  id              String    @id @default(cuid())
+  leagueId        String    @unique
+  
+  // Offense scoring
+  passingYards    Decimal   @default(0.04) // Points per yard
+  passingTds      Decimal   @default(4)    // Points per TD
+  passingInts     Decimal   @default(-2)   // Points per INT
+  rushingYards    Decimal   @default(0.1)  // Points per yard
+  rushingTds      Decimal   @default(6)    // Points per TD
+  receivingYards  Decimal   @default(0.1)  // Points per yard
+  receivingTds    Decimal   @default(6)    // Points per TD
+  receptions      Decimal   @default(0)    // PPR scoring
+  fumbles         Decimal   @default(-2)   // Points per fumble lost
+  
+  // Kicking scoring
+  fieldGoals      Decimal   @default(3)    // Points per FG
+  extraPoints     Decimal   @default(1)    // Points per XP
+  
+  // Defense scoring
+  sacks           Decimal   @default(1)    // Points per sack
+  interceptions   Decimal   @default(2)    // Points per INT
+  fumbleRecoveries Decimal  @default(2)    // Points per fumble recovery
+  safeties        Decimal   @default(2)    // Points per safety
+  defensiveTds    Decimal   @default(6)    // Points per defensive TD
+  pointsAllowed0  Decimal   @default(10)   // Points if 0 points allowed
+  pointsAllowed1to6 Decimal @default(7)    // Points if 1-6 points allowed
+  pointsAllowed7to13 Decimal @default(4)   // Points if 7-13 points allowed
+  pointsAllowed14to20 Decimal @default(1)  // Points if 14-20 points allowed
+  pointsAllowed21to27 Decimal @default(0)  // Points if 21-27 points allowed
+  pointsAllowed28plus Decimal @default(-4) // Points if 28+ points allowed
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relationships
+  league          League    @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+
+  @@map("scoring_settings")
+}
+
+// Roster position requirements
+model RosterSettings {
+  id              String    @id @default(cuid())
+  leagueId        String    @unique
+  qbSlots         Int       @default(1)   // Quarterback slots
+  rbSlots         Int       @default(2)   // Running back slots
+  wrSlots         Int       @default(2)   // Wide receiver slots
+  teSlots         Int       @default(1)   // Tight end slots
+  flexSlots       Int       @default(1)   // Flex slots (RB/WR/TE)
+  kSlots          Int       @default(1)   // Kicker slots
+  defSlots        Int       @default(1)   // Defense slots
+  benchSlots      Int       @default(6)   // Bench slots
+  irSlots         Int       @default(0)   // Injured reserve slots
+  maxRosterSize   Int       @default(15)  // Total roster size
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relationships
+  league          League    @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+
+  @@map("roster_settings")
+}
+
+// Fantasy teams owned by users
+model Team {
+  id              String    @id @default(cuid())
+  leagueId        String
+  ownerId         String
+  name            String
+  logoUrl         String?
+  wins            Int       @default(0)
+  losses          Int       @default(0)
+  ties            Int       @default(0)
+  totalPoints     Decimal   @default(0)
+  isActive        Boolean   @default(true)
+  waiverPriority  Int       @default(1)
+  transactionCount Int      @default(0)
+  paidEntry       Boolean   @default(false)
+  amountOwed      Decimal   @default(0)
+  amountPaid      Decimal   @default(0)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relationships
+  league          League    @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  owner           User      @relation(fields: [ownerId], references: [id])
+  roster          Roster[]
+  draftPicks      DraftPick[]
+  homeGames       Game[]    @relation("HomeTeam")
+  awayGames       Game[]    @relation("AwayTeam")
+  transactions    Transaction[]
+  offeredTrades   TradeOffer[] @relation("OfferingTeam")
+  targetedTrades  TradeOffer[] @relation("TargetTeam")
+
+  @@unique([leagueId, ownerId])
+  @@map("teams")
+}
+
+// NFL Players database
+model Player {
+  id              String    @id @default(cuid())
+  externalId      String?   @unique // External API player ID
+  firstName       String
+  lastName        String
+  position        Position
+  team            String    // NFL team abbreviation
+  number          Int?      // Jersey number
+  byeWeek         Int?      // Bye week number
+  isActive        Boolean   @default(true)
+  injuryStatus    InjuryStatus @default(HEALTHY)
+  injuryNote      String?
+  imageUrl        String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relationships
+  roster          Roster[]
+  draftPicks      DraftPick[]
+  transactions    Transaction[]
+  gameStats       GameStats[]
+  weeklyProjections WeeklyProjection[]
+  tradeOfferPlayers TradeOfferPlayer[]
+
+  @@map("players")
+}
+
+// Team rosters (which players are on which teams)
+model Roster {
+  id              String    @id @default(cuid())
+  teamId          String
+  playerId        String
+  position        RosterPosition @default(BENCH)
+  isStarter       Boolean   @default(false)
+  acquiredDate    DateTime  @default(now())
+  weekAdded       Int?      // Week player was added
+  
+  // Relationships
+  team            Team      @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  player          Player    @relation(fields: [playerId], references: [id])
+
+  @@unique([teamId, playerId])
+  @@map("roster")
+}
+
+// Draft information
+model Draft {
+  id              String    @id @default(cuid())
+  leagueId        String    @unique
+  draftType       DraftType
+  draftDate       DateTime?
+  isComplete      Boolean   @default(false)
+  currentRound    Int       @default(1)
+  currentPick     Int       @default(1)
+  timePerPick     Int       @default(60) // Seconds per pick
+  draftOrder      Json?     // Array of team IDs in draft order
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relationships
+  league          League    @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  picks           DraftPick[]
+
+  @@map("drafts")
+}
+
+// Individual draft picks
+model DraftPick {
+  id              String    @id @default(cuid())
+  draftId         String
+  teamId          String
+  userId          String
+  playerId        String?   // Null until pick is made
+  round           Int
+  pick            Int       // Overall pick number
+  pickInRound     Int       // Pick number within the round
+  pickTime        DateTime?
+  isKeeper        Boolean   @default(false)
+  createdAt       DateTime  @default(now())
+
+  // Relationships
+  draft           Draft     @relation(fields: [draftId], references: [id], onDelete: Cascade)
+  team            Team      @relation(fields: [teamId], references: [id])
+  user            User      @relation(fields: [userId], references: [id])
+  player          Player?   @relation(fields: [playerId], references: [id])
+
+  @@unique([draftId, round, pickInRound])
+  @@map("draft_picks")
+}
+
+// Weekly games/matchups
+model Game {
+  id              String    @id @default(cuid())
+  leagueId        String
+  homeTeamId      String
+  awayTeamId      String
+  week            Int
+  season          Int       @default(2025)
+  homeScore       Decimal   @default(0)
+  awayScore       Decimal   @default(0)
+  isComplete      Boolean   @default(false)
+  isPlayoffs      Boolean   @default(false)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relationships
+  league          League    @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  homeTeam        Team      @relation("HomeTeam", fields: [homeTeamId], references: [id])
+  awayTeam        Team      @relation("AwayTeam", fields: [awayTeamId], references: [id])
+
+  @@unique([leagueId, homeTeamId, awayTeamId, week, season])
+  @@map("games")
+}
+
+// Player transactions (adds, drops, trades)
+model Transaction {
+  id              String    @id @default(cuid())
+  leagueId        String
+  teamId          String
+  userId          String
+  playerId        String
+  transactionType TransactionType
+  week            Int
+  description     String?
+  isProcessed     Boolean   @default(false)
+  processedAt     DateTime?
+  createdAt       DateTime  @default(now())
+
+  // Relationships
+  league          League    @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  team            Team      @relation(fields: [teamId], references: [id])
+  user            User      @relation(fields: [userId], references: [id])
+  player          Player    @relation(fields: [playerId], references: [id])
+
+  @@map("transactions")
+}
+
+// Trade offers between teams
+model TradeOffer {
+  id              String    @id @default(cuid())
+  leagueId        String
+  offeringTeamId  String
+  targetTeamId    String
+  offererId       String
+  targetId        String
+  status          TradeStatus @default(PENDING)
+  note            String?
+  expiresAt       DateTime?
+  respondedAt     DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relationships
+  league          League    @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  offeringTeam    Team      @relation("OfferingTeam", fields: [offeringTeamId], references: [id])
+  targetTeam      Team      @relation("TargetTeam", fields: [targetTeamId], references: [id])
+  offerer         User      @relation("TradeOfferer", fields: [offererId], references: [id])
+  target          User      @relation("TradeTarget", fields: [targetId], references: [id])
+  players         TradeOfferPlayer[]
+
+  @@map("trade_offers")
+}
+
+// Players involved in trade offers
+model TradeOfferPlayer {
+  id              String    @id @default(cuid())
+  tradeOfferId    String
+  playerId        String
+  fromTeam        Boolean   // true if from offering team, false if from target team
+
+  // Relationships
+  tradeOffer      TradeOffer @relation(fields: [tradeOfferId], references: [id], onDelete: Cascade)
+  player          Player    @relation(fields: [playerId], references: [id])
+
+  @@unique([tradeOfferId, playerId])
+  @@map("trade_offer_players")
+}
+
+// Messaging system
+model Message {
+  id              String    @id @default(cuid())
+  leagueId        String?   // Null for global messages
+  senderId        String
+  recipientId     String?   // Null for league-wide messages
+  subject         String?
+  content         String
+  messageType     MessageType @default(PERSONAL)
+  isRead          Boolean   @default(false)
+  readAt          DateTime?
+  createdAt       DateTime  @default(now())
+
+  // Relationships
+  league          League?   @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  sender          User      @relation(fields: [senderId], references: [id])
+
+  @@map("messages")
+}
+
+// Player game statistics
+model GameStats {
+  id              String    @id @default(cuid())
+  playerId        String
+  week            Int
+  season          Int       @default(2025)
+  
+  // Passing stats
+  passingYards    Int       @default(0)
+  passingTds      Int       @default(0)
+  passingInts     Int       @default(0)
+  passingAttempts Int       @default(0)
+  
+  // Rushing stats
+  rushingYards    Int       @default(0)
+  rushingTds      Int       @default(0)
+  rushingAttempts Int       @default(0)
+  
+  // Receiving stats
+  receptions      Int       @default(0)
+  receivingYards  Int       @default(0)
+  receivingTds    Int       @default(0)
+  targets         Int       @default(0)
+  
+  // Other stats
+  fumbles         Int       @default(0)
+  fumblesLost     Int       @default(0)
+  
+  // Kicking stats
+  fieldGoalsMade  Int       @default(0)
+  fieldGoalsAttempted Int   @default(0)
+  extraPointsMade Int       @default(0)
+  extraPointsAttempted Int  @default(0)
+  
+  // Defense stats
+  sacks           Decimal   @default(0)
+  interceptions   Int       @default(0)
+  fumbleRecoveries Int      @default(0)
+  safeties        Int       @default(0)
+  defensiveTds    Int       @default(0)
+  pointsAllowed   Int       @default(0)
+  
+  fantasyPoints   Decimal   @default(0)
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relationships
+  player          Player    @relation(fields: [playerId], references: [id])
+
+  @@unique([playerId, week, season])
+  @@map("game_stats")
+}
+
+// Weekly player projections
+model WeeklyProjection {
+  id              String    @id @default(cuid())
+  playerId        String
+  week            Int
+  season          Int       @default(2025)
+  
+  projectedPoints Decimal   @default(0)
+  confidence      Decimal   @default(0) // 0-100 confidence score
+  
+  // Projected stats (similar structure to GameStats)
+  projPassingYards    Decimal @default(0)
+  projPassingTds      Decimal @default(0)
+  projRushingYards    Decimal @default(0)
+  projRushingTds      Decimal @default(0)
+  projReceptions      Decimal @default(0)
+  projReceivingYards  Decimal @default(0)
+  projReceivingTds    Decimal @default(0)
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relationships
+  player          Player    @relation(fields: [playerId], references: [id])
+
+  @@unique([playerId, week, season])
+  @@map("weekly_projections")
+}
+
+// Enums
+enum DraftType {
+  LIVE_ONLINE
+  LIVE_OFFLINE
+  AUTOMATED
+}
+
+enum ScoringType {
+  BASIC
+  PERFORMANCE
+}
+
+enum TradeReviewType {
+  NONE
+  COMMISSIONER
+  LEAGUE_VOTE
+}
+
+enum WaiverType {
+  REVERSE_STANDINGS
+  ROLLING
+  FAAB // Free Agent Acquisition Budget
+}
+
+enum Position {
+  QB
+  RB
+  WR
+  TE
+  K
+  DEF
+  DL
+  LB
+  DB
+}
+
+enum RosterPosition {
+  QB
+  RB
+  WR
+  TE
+  FLEX
+  K
+  DEF
+  BENCH
+  IR
+}
+
+enum InjuryStatus {
+  HEALTHY
+  QUESTIONABLE
+  DOUBTFUL
+  OUT
+  IR
+  PUP
+}
+
+enum TransactionType {
+  ADD
+  DROP
+  TRADE
+  WAIVER_CLAIM
+}
+
+enum TradeStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  EXPIRED
+  CANCELLED
+}
+
+enum MessageType {
+  PERSONAL
+  LEAGUE_WIDE
+  SYSTEM
+  TRADE_OFFER
+  COMMISSIONER
+}

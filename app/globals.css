@@ -1,0 +1,85 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom hover effects */
+@layer components {
+  .btn-primary {
+    @apply bg-red-600 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-300 ease-in-out;
+    @apply hover:bg-red-700 hover:shadow-lg hover:shadow-red-500/25 hover:scale-105;
+    @apply focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2;
+    @apply active:scale-95;
+  }
+  
+  .btn-secondary {
+    @apply border-2 border-red-600 text-red-600 px-6 py-3 rounded-lg font-semibold transition-all duration-300 ease-in-out;
+    @apply hover:bg-red-600 hover:text-white hover:shadow-lg hover:shadow-red-500/25 hover:scale-105;
+    @apply focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2;
+    @apply active:scale-95;
+  }
+  
+  .link-hover {
+    @apply transition-all duration-300 ease-in-out;
+    @apply hover:text-red-500 hover:drop-shadow-sm;
+  }
+  
+  .card-hover {
+    @apply transition-all duration-300 ease-in-out cursor-pointer;
+    @apply hover:shadow-xl hover:shadow-gray-200/50 hover:scale-105 hover:-translate-y-1;
+    @apply active:scale-100 active:translate-y-0;
+  }
+  
+  .glow-red {
+    @apply hover:shadow-lg hover:shadow-red-500/30 hover:scale-105;
+    @apply transition-all duration-300 ease-in-out;
+  }
+  
+  .glow-blue {
+    @apply hover:shadow-lg hover:shadow-blue-500/30 hover:scale-105;
+    @apply transition-all duration-300 ease-in-out;
+  }
+  
+  .nav-link {
+    @apply text-gray-300 transition-all duration-300 ease-in-out;
+    @apply hover:text-red-400 hover:drop-shadow-md hover:scale-110;
+  }
+  
+  .form-input {
+    @apply w-full px-3 py-2 border border-gray-300 rounded-md transition-all duration-300 ease-in-out;
+    @apply focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 focus:shadow-md;
+    @apply hover:border-gray-400;
+  }
+  
+  .form-select {
+    @apply w-full px-3 py-2 border border-gray-300 rounded-md transition-all duration-300 ease-in-out;
+    @apply focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 focus:shadow-md;
+    @apply hover:border-gray-400;
+  }
+}
