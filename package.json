@@ -6,19 +6,36 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "import-players": "tsx scripts/import-players.ts",
+    "nfl-data:setup": "pip install nfl-data-py pandas python-dotenv requests",
+    "nfl-data:fetch": "python scripts/nfl-data-pipeline.py full",
+    "nfl-data:rosters": "python scripts/nfl-data-pipeline.py rosters",
+    "nfl-data:stats": "python scripts/nfl-data-pipeline.py stats",
+    "nfl-data:injuries": "python scripts/nfl-data-pipeline.py injuries",
+    "nfl-data:projections": "python scripts/nfl-data-pipeline.py projections",
+    "nfl-data:transform": "tsx scripts/transform-nfl-data.ts",
+    "nfl-data:full": "npm run nfl-data:fetch && npm run nfl-data:transform",
+    "test:projections": "npx tsx scripts/test-projections.ts",
+    "test:position-projections": "npx tsx scripts/test-position-projections.ts",
+    "docs:success": "type PROJECTION_ENGINE_SUCCESS.md"
   },
   "dependencies": {
+    "@next-auth/prisma-adapter": "^1.0.7",
     "@prisma/client": "^6.10.1",
     "@supabase/auth-helpers-nextjs": "^0.10.0",
     "@supabase/supabase-js": "^2.50.2",
     "@types/bcryptjs": "^2.4.6",
+    "@types/uuid": "^10.0.0",
     "bcryptjs": "^3.0.2",
+    "lucide-react": "^0.525.0",
     "next": "15.3.4",
     "next-auth": "^4.24.11",
     "prisma": "^6.10.1",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "recharts": "^3.0.2",
+    "uuid": "^11.1.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
@@ -26,9 +43,11 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "dotenv": "^16.6.1",
     "eslint": "^9",
     "eslint-config-next": "15.3.4",
     "tailwindcss": "^4",
+    "tsx": "^4.20.3",
     "typescript": "^5"
   }
 }

@@ -1,0 +1,26 @@
+[
+  {
+    "player_id": "hill_tyreek_01",
+    "player_name": "Tyreek Hill",
+    "position": "WR",
+    "team": "MIA",
+    "week": 1,
+    "season": 2024,
+    "targets": 12,
+    "receptions": 8,
+    "receiving_yards": 156,
+    "receiving_tds": 2
+  },
+  {
+    "player_id": "kelce_travis_01",
+    "player_name": "Travis Kelce",
+    "position": "TE",
+    "team": "KC",
+    "week": 1,
+    "season": 2024,
+    "targets": 10,
+    "receptions": 7,
+    "receiving_yards": 89,
+    "receiving_tds": 1
+  }
+]

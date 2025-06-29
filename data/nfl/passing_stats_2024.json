@@ -1,0 +1,28 @@
+[
+  {
+    "player_id": "mahomes_patrick_01",
+    "player_name": "Patrick Mahomes",
+    "position": "QB",
+    "team": "KC",
+    "week": 1,
+    "season": 2024,
+    "completions": 28,
+    "attempts": 42,
+    "passing_yards": 378,
+    "passing_tds": 4,
+    "interceptions": 1
+  },
+  {
+    "player_id": "allen_josh_01",
+    "player_name": "Josh Allen",
+    "position": "QB",
+    "team": "BUF",
+    "week": 1,
+    "season": 2024,
+    "completions": 22,
+    "attempts": 35,
+    "passing_yards": 295,
+    "passing_tds": 2,
+    "interceptions": 0
+  }
+]

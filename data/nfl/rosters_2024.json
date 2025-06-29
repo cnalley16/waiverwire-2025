@@ -1,0 +1,86 @@
+[
+  {
+    "player_id": "mahomes_patrick_01",
+    "player_name": "Patrick Mahomes",
+    "position": "QB",
+    "team": "KC",
+    "jersey_number": 15,
+    "height": "6-3",
+    "weight": 225,
+    "years_exp": 7,
+    "college": "Texas Tech",
+    "status": "ACT"
+  },
+  {
+    "player_id": "allen_josh_01",
+    "player_name": "Josh Allen",
+    "position": "QB",
+    "team": "BUF",
+    "jersey_number": 17,
+    "height": "6-5",
+    "weight": 237,
+    "years_exp": 6,
+    "college": "Wyoming",
+    "status": "ACT"
+  },
+  {
+    "player_id": "jackson_lamar_01",
+    "player_name": "Lamar Jackson",
+    "position": "QB",
+    "team": "BAL",
+    "jersey_number": 8,
+    "height": "6-2",
+    "weight": 212,
+    "years_exp": 6,
+    "college": "Louisville",
+    "status": "ACT"
+  },
+  {
+    "player_id": "mccaffrey_christian_01",
+    "player_name": "Christian McCaffrey",
+    "position": "RB",
+    "team": "SF",
+    "jersey_number": 23,
+    "height": "5-11",
+    "weight": 205,
+    "years_exp": 7,
+    "college": "Stanford",
+    "status": "ACT"
+  },
+  {
+    "player_id": "hill_tyreek_01",
+    "player_name": "Tyreek Hill",
+    "position": "WR",
+    "team": "MIA",
+    "jersey_number": 10,
+    "height": "5-10",
+    "weight": 185,
+    "years_exp": 8,
+    "college": "West Alabama",
+    "status": "ACT"
+  },
+  {
+    "player_id": "kelce_travis_01",
+    "player_name": "Travis Kelce",
+    "position": "TE",
+    "team": "KC",
+    "jersey_number": 87,
+    "height": "6-5",
+    "weight": 250,
+    "years_exp": 11,
+    "college": "Cincinnati",
+    "status": "ACT"
+  },
+  {
+    "player_id": "tucker_justin_01",
+    "player_name": "Justin Tucker",
+    "position": "K",
+    "team": "BAL",
+    "jersey_number": 9,
+    "height": "6-1",
+    "weight": 183,
+    "years_exp": 12,
+    "college": "Texas",
+    "status": "ACT"
+  }
+]
